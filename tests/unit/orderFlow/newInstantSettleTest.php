@@ -5,6 +5,7 @@ namespace Reepay\Checkout\Tests\OrderFlow;
 use Reepay\Checkout\OrderFlow\InstantSettle;
 use Reepay\Checkout\OrderFlow\OrderCapture;
 use Reepay\Checkout\Tests\Helpers\Reepay_UnitTestCase;
+use Reepay\Checkout\Integrations\PWGiftCardsIntegration;
 use WC_Order;
 use WC_Order_Item_Product;
 use WC_Product;
@@ -54,6 +55,12 @@ class InstantSettleTest extends Reepay_UnitTestCase {
     private MockObject $reepay;
     private WC_Order_Item_Product $order_item; // our order item
 
+    public static function set_up_before_class() {
+		parent::set_up_before_class();
+
+		self::set_up_data_before_class();
+	}
+
     public function setUp(): void {
         parent::setUp();
         // Use our testable subclass
@@ -82,11 +89,14 @@ class InstantSettleTest extends Reepay_UnitTestCase {
             ->with('settle')
             ->willReturn([]);
             
-        $this->order->expects($this->once())
-            ->method('get_items')
+        $this->order->method('get_items')
             ->willReturn([]);
+
+        self::$options->set_option(
+            'settle', []
+        );
             
-        $result = TestableInstantSettle::get_instant_settle_items($this->order);
+        $result = self::$instant_settle_instance->get_instant_settle_items( $this->order );
         $this->assertEmpty($result);
     }
 
@@ -94,38 +104,43 @@ class InstantSettleTest extends Reepay_UnitTestCase {
      * @test
      */
     public function test_get_instant_settle_items_with_physical_product() {
-        $this->reepay->expects($this->any())
-            ->method('get_setting')
-            ->with('settle')
-            ->willReturn([TestableInstantSettle::SETTLE_PHYSICAL]);
-
         $product = $this->createMock(WC_Product::class);
         $product->method('is_downloadable')->willReturn(false);
         $product->method('is_virtual')->willReturn(false);
         $product->method('needs_shipping')->willReturn(true);
-        
+
         $this->order_item->method('get_product')->willReturn($product);
         // Remove overly strict expectation on get_meta()
         $this->order_item->method('get_meta')->willReturn('');
-        
-        $this->order->expects($this->once())
+
+        $this->order->expects($this->any())
             ->method('get_items')
+            ->with() 
             ->willReturn([$this->order_item]);
 
-        $result = TestableInstantSettle::get_instant_settle_items($this->order);
-        $this->assertCount(1, $result);
+        $this->order->expects($this->once())
+            ->method('get_shipping_methods')
+            ->willReturn([]);
+
+        $this->order->method('get_shipping_methods')->willReturn([]);
+
+        self::$options->set_option(
+            'settle',
+            array(
+                InstantSettle::SETTLE_PHYSICAL,
+            )
+        );
+
+        $result = self::$instant_settle_instance->get_instant_settle_items( $this->order );
+
+        $this->assertCount(3, $result); // 2 line items + 1 shipping item
         $this->assertSame($this->order_item, $result[0]);
     }
 
     /**
      * @test
      */
-    public function test_get_instant_settle_items_with_fees() {
-        $this->reepay->expects($this->any())
-            ->method('get_setting')
-            ->with('settle')
-            ->willReturn([TestableInstantSettle::SETTLE_FEE]);  // returns ['fee']
-            
+    public function test_get_instant_settle_items_with_fees() {            
         $fee_item = $this->createMock(WC_Order_Item_Fee::class);
         $fee_item->method('get_meta')->willReturn('');
         
@@ -138,7 +153,14 @@ class InstantSettleTest extends Reepay_UnitTestCase {
             ->method('get_fees')
             ->willReturn([$fee_item]);
             
-        $result = TestableInstantSettle::get_instant_settle_items($this->order);
+        self::$options->set_option(
+            'settle',
+            array(
+                InstantSettle::SETTLE_FEE,
+            )
+        );
+
+        $result = self::$instant_settle_instance->get_instant_settle_items( $this->order );
         $this->assertCount(1, $result);
         $this->assertSame($fee_item, $result[0]);
     }
@@ -146,12 +168,7 @@ class InstantSettleTest extends Reepay_UnitTestCase {
     /**
      * @test
      */
-    public function test_get_instant_settle_items_with_shipping() {
-        $this->reepay->expects($this->any())
-            ->method('get_setting')
-            ->with('settle')
-            ->willReturn([TestableInstantSettle::SETTLE_PHYSICAL]);  // returns ['physical']
-            
+    public function test_get_instant_settle_items_with_shipping() {            
         $shipping_item = $this->createMock(WC_Order_Item_Shipping::class);
         $shipping_item->method('get_meta')->willReturn('');
         
@@ -164,7 +181,14 @@ class InstantSettleTest extends Reepay_UnitTestCase {
             ->method('get_shipping_methods')
             ->willReturn([$shipping_item]);
             
-        $result = TestableInstantSettle::get_instant_settle_items($this->order);
+        self::$options->set_option(
+            'settle',
+            array(
+                InstantSettle::SETTLE_PHYSICAL,
+            )
+        );
+
+        $result = self::$instant_settle_instance->get_instant_settle_items( $this->order );
         $this->assertCount(1, $result);
         $this->assertSame($shipping_item, $result[0]);
     }

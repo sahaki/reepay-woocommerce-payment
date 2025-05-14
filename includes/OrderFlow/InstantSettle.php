@@ -203,31 +203,36 @@ class InstantSettle {
 	 *
 	 * @return WC_Order_Item[]
 	 */
-	public static function get_instant_settle_items( WC_Order $order ): array {
+	
+	 public static function get_instant_settle_items( WC_Order $order ): array {
 		$settle_types = reepay()->get_setting( 'settle' ) ?: array();
 		$items_data   = array();
 
-		// Walk through the order lines and check if order item is virtual, downloadable, recurring or physical.
-		foreach ( $order->get_items() as $order_item ) {
-			/**
-			 * WC_Order_Item_Product returns not WC_Order_Item
-			 *
-			 * @var WC_Order_Item_Product $order_item
-			 */
-			$product = $order_item->get_product();
+		 // Ensure $order->get_items() returns a valid array.
+		$order_items = $order->get_items();
+		if (is_array( $order_items ) || !empty( $order_items ) ) {
+			// Walk through the order lines and check if order item is virtual, downloadable, recurring or physical.
+			foreach ( $order_items as $order_item ) {
+				/**
+				 * WC_Order_Item_Product returns not WC_Order_Item
+				 *
+				 * @var WC_Order_Item_Product $order_item
+				 */
+				$product = $order_item->get_product();
 
-			if ( self::can_product_be_settled_instantly( $product ) ) {
-				$items_data[] = $order_item;
-			}
-		}
-
-		if ( ! empty( $items_data ) ) {
-			foreach ( $order->get_items( PWGiftCardsIntegration::KEY_PW_GIFT_ITEMS ) as $line ) {
-				$items_data[] = $line;
+				if ( self::can_product_be_settled_instantly( $product ) ) {
+					$items_data[] = $order_item;
+				}
 			}
 
-			foreach ( $order->get_items( WCGiftCardsIntegration::KEY_WC_GIFT_ITEMS ) as $line ) {
-				$items_data[] = $line;
+			if ( ! empty( $items_data ) ) {
+				foreach ( $order->get_items( PWGiftCardsIntegration::KEY_PW_GIFT_ITEMS ) as $line ) {
+					$items_data[] = $line;
+				}
+
+				foreach ( $order->get_items( WCGiftCardsIntegration::KEY_WC_GIFT_ITEMS ) as $line ) {
+					$items_data[] = $line;
+				}
 			}
 		}
 
