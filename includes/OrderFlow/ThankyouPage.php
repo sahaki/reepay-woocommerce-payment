@@ -331,8 +331,10 @@ class ThankyouPage {
 			}
 		}
 
-		if ( ! isset( $invoice_data['plan'] ) || ! isset( $invoice_data['subscription'] ) ) {
-			return null;
+		if ( is_wp_error( $invoice_data ) || 
+         ! isset( $invoice_data['plan'] ) || 
+         ! isset( $invoice_data['subscription'] ) ) {
+			return null; // Exit if invoice data is invalid or missing.
 		}
 
 		$subscription_plan = $invoice_data['plan'];
