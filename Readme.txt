@@ -4,7 +4,7 @@ Tags: Frisbii, billwerk+, visa, mastercard, dankort, mobilepay
 Requires at least: 4.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.7.16
+Stable tag: 1.8
 License: GPL
 License URI: http://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
@@ -18,6 +18,10 @@ The Frisbii Pay plugin extends WooCommerce allowing you to take payments on your
 See installation guide right here: https://docu.billwerk.plus/help/en/apps/woocommerce/setup-woocommerce-plugin.html
 
 == Changelog ==
+v 1.8
+- [Fix] - Swish payments fail.
+- [Fix] - The order received-page shows "Vent venligst lidt. Vi tjekker betalingsstatus." (Please wait. We are checking payment status.) and never shows the order details.
+
 v 1.7.16
 - [Fix] - Particular settings including "Instant Settle physical products" caused 1/100 amount instant settle.
 - [Improvement] - Product name change to "Frisbii Pay".
