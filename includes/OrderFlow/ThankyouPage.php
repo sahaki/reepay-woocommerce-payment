@@ -288,26 +288,24 @@ class ThankyouPage {
 		}
 
 		// Retrieve the subscription handle from the order metadata.
-		$_reepay_subscription_handle = $order->get_meta('_reepay_subscription_handle', true);
+		$_reepay_subscription_handle = $order->get_meta( '_reepay_subscription_handle', true );
 
 		// Check if the subscription handle exists.
-		if (!empty($_reepay_subscription_handle)) {
+		if ( ! empty( $_reepay_subscription_handle ) ) {
 			// Fetch subscription details from the Reepay API using the subscription handle.
-			$subscription_handle = reepay_s()->api()->request("subscription/$_reepay_subscription_handle");
+			$subscription_handle = reepay_s()->api()->request( "subscription/$_reepay_subscription_handle" );
 
 			// Check if the subscription details contain a plan.
-			if (isset($subscription_handle['plan'])) {
+			if ( isset( $subscription_handle['plan'] ) ) {
 				$subscription_plan = $subscription_handle['plan'];
 
 				// Fetch the plan details from the Reepay API using the plan identifier.
-				$plan_data = reepay_s()->api()->request("plan/$subscription_plan/current");
+				$plan_data = reepay_s()->api()->request( "plan/$subscription_plan/current" );
 
 				// Check if the plan includes a trial period.
-				if (isset($plan_data['trial_interval_length'])) {
-					return null; // Exit if the plan has a trial period.
-				} 
-				// Check if the plan's schedule type is set to 'manual' (manual on-demand).
-				elseif (isset($plan_data['schedule_type']) && 'manual' === $plan_data['schedule_type']) {
+				if ( isset( $plan_data['trial_interval_length'] ) ) {
+					return null;
+				} elseif ( isset( $plan_data['schedule_type'] ) && 'manual' === $plan_data['schedule_type'] ) { // Check if the plan's schedule type is set to 'manual' (manual on-demand).
 					return null; // Exit if the schedule type is manual.
 				}
 			}
@@ -331,9 +329,9 @@ class ThankyouPage {
 			}
 		}
 
-		if ( is_wp_error( $invoice_data ) || 
-         ! isset( $invoice_data['plan'] ) || 
-         ! isset( $invoice_data['subscription'] ) ) {
+		if ( is_wp_error( $invoice_data ) ||
+		! isset( $invoice_data['plan'] ) ||
+		! isset( $invoice_data['subscription'] ) ) {
 			return null; // Exit if invoice data is invalid or missing.
 		}
 
