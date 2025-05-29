@@ -69,7 +69,15 @@ jQuery(function ($) {
                     var processed = response.data.processed;
                     var percentage = (processed / totalRecords) * 100;
                     $('.processing-percentage').html(percentage.toFixed(0) + '%');
-                    result.append('<p>' + migrationData.processed_success + '</p>');
+
+                    // Check if there are any failed items
+                    var hasFail = response.data.batch_results.some(function(batchResult) {
+                        return batchResult.status === 'fail';
+                    });
+
+                    if (!hasFail) {
+                        result.append('<p>' + migrationData.processed_success + '</p>');
+                    }
 
                     // Loop through batch_results and display failed items
                     response.data.batch_results.forEach(function(batchResult) {
