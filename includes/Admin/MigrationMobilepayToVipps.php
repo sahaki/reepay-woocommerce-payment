@@ -186,8 +186,10 @@ class MigrationMobilepayToVipps {
 
 		foreach ( $batch as $item ) {
 			$customer_handle = $item[0];
-			if ( empty( $customer_handle ) || 'customer_handle' === $customer_handle ) {
+			if ( 'customer_handle' === $customer_handle ) {
 				continue; // Skip if customer handle is empty or header name customer_handle.
+			} elseif (empty( $item[1] ) ) {
+				continue;
 			}
 
 			$old_mps_payment_method             = $item[1];
